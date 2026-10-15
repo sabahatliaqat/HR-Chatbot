@@ -1,0 +1,294 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ---- Login page: sliding Sign In / Sign Up card ---- */
+
+.container-custom {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 1000px;
+  min-height: 600px;
+}
+
+.form-container {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  transition: all 0.55s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.sign-in-container {
+  left: 0;
+  width: 50%;
+  z-index: 2;
+}
+
+.container-custom.right-panel-active .sign-in-container {
+  transform: translateX(100%);
+}
+
+.sign-up-container {
+  left: 0;
+  width: 50%;
+  opacity: 0;
+  z-index: 1;
+}
+
+.container-custom.right-panel-active .sign-up-container {
+  transform: translateX(100%);
+  opacity: 1;
+  z-index: 5;
+  animation: show 0.6s;
+}
+
+@keyframes show {
+  0%, 49.99% { opacity: 0; z-index: 1; }
+  50%, 100% { opacity: 1; z-index: 5; }
+}
+
+.overlay-container {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  transition: transform 0.55s cubic-bezier(0.65, 0, 0.35, 1);
+  z-index: 100;
+}
+
+.container-custom.right-panel-active .overlay-container {
+  transform: translateX(-100%);
+}
+
+.overlay {
+  background: linear-gradient(135deg, #7015e2 0%, #8a3ffc 100%);
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: #ffffff;
+  position: relative;
+  left: -100%;
+  height: 100%;
+  width: 200%;
+  transform: translateX(0);
+  transition: transform 0.55s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.container-custom.right-panel-active .overlay {
+  transform: translateX(50%);
+}
+
+.overlay-panel {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 0 40px;
+  text-align: center;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  transform: translateX(0);
+  transition: transform 0.55s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.overlay-left { transform: translateX(-20%); }
+.container-custom.right-panel-active .overlay-left { transform: translateX(0); }
+.overlay-right { right: 0; transform: translateX(0); }
+.container-custom.right-panel-active .overlay-right { transform: translateX(20%); }
+
+.input-field {
+  width: 100%;
+  background-color: theme('colors.surface-container');
+  border: 1px solid theme('colors.surface-variant');
+  padding: 12px 16px 12px 48px;
+  outline: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: theme('fontFamily.body-md');
+  font-size: 14px;
+  color: theme('colors.on-surface');
+}
+
+.input-field:focus {
+  border-color: theme('colors.primary');
+  box-shadow: 0 0 0 2px theme('colors.inverse-primary');
+  background-color: theme('colors.surface-container-lowest');
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: theme('colors.outline');
+  pointer-events: none;
+  transition: color 0.25s ease;
+}
+
+.input-wrapper:focus-within .input-icon {
+  color: theme('colors.primary');
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, theme('colors.primary'), theme('colors.primary-container'));
+  color: theme('colors.on-primary');
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px -4px rgba(138, 63, 252, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -8px rgba(138, 63, 252, 0.4);
+}
+
+.btn-outline {
+  background: theme('colors.on-primary');
+  color: theme('colors.primary');
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.15);
+}
+
+.btn-outline:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.25);
+}
+
+/* ---- Chat dashboard ---- */
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #7015e2 0%, #8a3ffc 100%);
+}
+
+.btn-hover-lift {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -8px rgba(138, 63, 252, 0.25);
+}
+
+.message-enter {
+  animation: slideUpFade 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.typing-dot {
+  animation: typing 1.4s infinite ease-in-out both;
+}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+/* ---- Admin dashboard ---- */
+
+.arcana-glow {
+  box-shadow: 0 12px 32px -8px rgba(138, 63, 252, 0.12);
+}
+
+.arcana-gradient-bg {
+  background: linear-gradient(135deg, #8a3ffc 0%, #7825ea 100%);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* NEW — subtle dot-grid texture for the login background, so it doesn't
+   feel empty behind the card. Very low opacity, purely decorative. */
+.bg-dot-pattern {
+  background-image: radial-gradient(circle, theme('colors.outline-variant') 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+  opacity: 0.35;
+}
+/* NEW — generic fade+slight-rise for view switches (e.g. Chat <-> Checklist
+   tab), so swapping the main content area doesn't feel like an abrupt cut. */
+.view-fade-in {
+  animation: viewFadeIn 0.25s ease-out both;
+}
+
+/* `to` uses the literal keyword `none`, not `translateY(0)` — verified via
+   getComputedStyle() that Chromium does NOT fall back to the underlying
+   (un-animated) value just because a keyframe omits a property; it holds
+   the last-interpolated value instead, which for translateY(6px) -> (omitted)
+   still resolved to a frozen `matrix(1,0,0,1,0,0)` (identity, but NOT the
+   keyword `none`). With animation-fill-mode: both, that frozen non-none
+   transform is held permanently after the animation ends, and per the CSS
+   spec any non-`none` transform makes the element a **containing block**
+   for `position: fixed` descendants. Every modal rendered inside a page
+   carrying this class (ConfirmModal, EmployeeChatModal) was silently
+   repositioned relative to this scrolling container instead of the
+   viewport — symptom: modals appearing at the wrong height, or drifting,
+   on any page taller than the viewport. Only an explicit `transform: none`
+   reliably avoids this. */
+@keyframes viewFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* NEW — subtle backdrop fade for modals (pairs with .animate-slide-up on
+   the modal panel itself) */
+.backdrop-fade-in {
+  animation: backdropFadeIn 0.2s ease-out both;
+}
+
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* NEW — source citation chip fades in slightly after the message text,
+   so the citation feels "attached" once the answer has formed. Subtle
+   and purposeful, matching the rest of the app's motion (no bounce). */
+.source-chip-enter {
+  animation: sourceFadeIn 0.3s ease-out 0.25s both;
+}
+
+@keyframes sourceFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* NEW — sidebar chat-history items stagger in on load instead of all
+   appearing at once. Each item gets an inline animation-delay in JSX. */
+.list-item-enter {
+  animation: slideUpFade 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* NEW — renders the markdown Gemini answers come back with (bold, lists)
+   instead of showing literal "**text**"/"* " characters. */
+.markdown-body > *:first-child { margin-top: 0; }
+.markdown-body > *:last-child { margin-bottom: 0; }
+.markdown-body p { margin: 0 0 0.75em; white-space: pre-wrap; }
+.markdown-body strong { font-weight: 700; }
+.markdown-body ul, .markdown-body ol { margin: 0 0 0.75em; padding-left: 1.25em; }
+.markdown-body ul { list-style: disc; }
+.markdown-body ol { list-style: decimal; }
+.markdown-body li { margin: 0.25em 0; }
+.markdown-body li > p { margin: 0; }
+.markdown-body code {
+  background: theme('colors.surface-container');
+  padding: 0.1em 0.4em;
+  border-radius: 0.25em;
+  font-size: 0.9em;
+}
+.markdown-body a { color: theme('colors.primary'); text-decoration: underline; }

@@ -1,0 +1,33 @@
+# Environment variables
+.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Vector store data
+faiss_index/
+*.faiss
+*.pkl
+
+# OS files
+.DS_Store
+
+# Node / frontend
+node_modules/
+frontend/dist/
+
+# Runtime data (regenerated on first run, not source code)
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/hr_chatbot.db
+backend/users.json
+backend/indexed_files.json
+
+# Editor / stray files
+.vscode/
+New Text Document.txt
+
+# Frontend build output
+frontend/dist/

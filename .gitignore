@@ -31,3 +31,16 @@ New Text Document.txt
 
 # Frontend build output
 frontend/dist/
+
+# Python cache and virtual environments
+**/__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local environment secrets
+.env.*
+!.env.example
+
+# Backend FAISS index
+backend/faiss_index/

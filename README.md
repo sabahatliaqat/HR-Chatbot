@@ -198,7 +198,7 @@ Internship-Project/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/ALI-Z-Ather/Internship-Project.git
+git clone https://github.com/sabahatliaqat/HR-Chatbot.git
 cd Internship-Project
 ```
 

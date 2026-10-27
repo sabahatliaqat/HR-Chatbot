@@ -2,12 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
-from upload_routes import router as upload_router
-from chat_routes import router as chat_router
-from auth_routes import router as auth_router
-from chat_history_routes import router as chat_history_router
-from checklist_routes import router as checklist_router
-from analytics_routes import router as analytics_router
+from routers.upload_routes import router as upload_router
+from routers.chat_routes import router as chat_router
+from routers.auth_routes import router as auth_router
+from routers.chat_history_routes import router as chat_history_router
+from routers.checklist_routes import router as checklist_router
+from routers.analytics_routes import router as analytics_router
+
 from database import init_db, SessionLocal, ChecklistItem
 
 app = FastAPI(

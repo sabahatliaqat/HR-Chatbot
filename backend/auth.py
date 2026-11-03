@@ -1,14 +1,14 @@
-
 """
 auth.py
 Minimal JWT-based auth — no SQL database.
 
 Employee accounts are stored in users.json.
-HR uses a fixed account configured through .env.
+HR uses a fixed account configured through backend/.env.
 """
 
 import os
 import json
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -16,9 +16,13 @@ import jwt
 from dotenv import load_dotenv
 from fastapi import Header, HTTPException
 
-load_dotenv()
+# Always load the .env file from the backend folder.
+BASE_DIR = Path(__file__).resolve().parent
+ENV_FILE = BASE_DIR / ".env"
 
-USERS_FILE = "users.json"
+load_dotenv(dotenv_path=ENV_FILE)
+
+USERS_FILE = BASE_DIR / "users.json"
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = "HS256"
@@ -28,12 +32,12 @@ HR_EMAIL = os.getenv("HR_EMAIL")
 HR_PASSWORD_HASH = os.getenv("HR_PASSWORD_HASH")
 
 if not JWT_SECRET:
-    raise ValueError("JWT_SECRET not found in .env file")
+    raise ValueError("JWT_SECRET not found in backend .env file")
 
 
 # Users JSON read/write
 def load_users() -> dict:
-    if os.path.exists(USERS_FILE):
+    if USERS_FILE.exists():
         with open(USERS_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
@@ -196,5 +200,3 @@ def get_optional_user(authorization: str = Header(None)) -> dict | None:
         return decode_token(token)
     except jwt.PyJWTError:
         return None
-
-    

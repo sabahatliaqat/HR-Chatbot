@@ -2,6 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: light;
+
+  --color-background: 249 249 254;
+  --color-on-background: 26 28 31;
+  --color-surface: 249 249 254;
+  --color-on-surface: 26 28 31;
+  --color-surface-variant: 226 226 231;
+  --color-on-surface-variant: 75 68 85;
+  --color-surface-bright: 249 249 254;
+  --color-surface-dim: 217 218 222;
+  --color-surface-container-lowest: 255 255 255;
+  --color-surface-container-low: 243 243 248;
+  --color-surface-container: 237 237 242;
+  --color-surface-container-high: 232 232 237;
+  --color-surface-container-highest: 226 226 231;
+  --color-outline: 124 116 135;
+  --color-outline-variant: 205 194 216;
+  --color-inverse-surface: 46 48 52;
+  --color-inverse-on-surface: 240 240 245;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --color-background: 18 18 24;
+  --color-on-background: 239 236 245;
+  --color-surface: 18 18 24;
+  --color-on-surface: 239 236 245;
+  --color-surface-variant: 63 58 72;
+  --color-on-surface-variant: 204 194 214;
+  --color-surface-bright: 58 54 66;
+  --color-surface-dim: 17 16 22;
+  --color-surface-container-lowest: 12 12 18;
+  --color-surface-container-low: 24 22 31;
+  --color-surface-container: 31 28 39;
+  --color-surface-container-high: 40 36 49;
+  --color-surface-container-highest: 50 45 60;
+  --color-outline: 155 145 168;
+  --color-outline-variant: 74 66 87;
+  --color-inverse-surface: 239 236 245;
+  --color-inverse-on-surface: 46 42 54;
+}
+
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
@@ -213,40 +257,25 @@
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* NEW — subtle dot-grid texture for the login background, so it doesn't
-   feel empty behind the card. Very low opacity, purely decorative. */
+/* ---- Login background texture ---- */
+
 .bg-dot-pattern {
   background-image: radial-gradient(circle, theme('colors.outline-variant') 1.5px, transparent 1.5px);
   background-size: 28px 28px;
   opacity: 0.35;
 }
-/* NEW — generic fade+slight-rise for view switches (e.g. Chat <-> Checklist
-   tab), so swapping the main content area doesn't feel like an abrupt cut. */
+
+/* ---- View transitions ---- */
+
 .view-fade-in {
   animation: viewFadeIn 0.25s ease-out both;
 }
 
-/* `to` uses the literal keyword `none`, not `translateY(0)` — verified via
-   getComputedStyle() that Chromium does NOT fall back to the underlying
-   (un-animated) value just because a keyframe omits a property; it holds
-   the last-interpolated value instead, which for translateY(6px) -> (omitted)
-   still resolved to a frozen `matrix(1,0,0,1,0,0)` (identity, but NOT the
-   keyword `none`). With animation-fill-mode: both, that frozen non-none
-   transform is held permanently after the animation ends, and per the CSS
-   spec any non-`none` transform makes the element a **containing block**
-   for `position: fixed` descendants. Every modal rendered inside a page
-   carrying this class (ConfirmModal, EmployeeChatModal) was silently
-   repositioned relative to this scrolling container instead of the
-   viewport — symptom: modals appearing at the wrong height, or drifting,
-   on any page taller than the viewport. Only an explicit `transform: none`
-   reliably avoids this. */
 @keyframes viewFadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
 }
 
-/* NEW — subtle backdrop fade for modals (pairs with .animate-slide-up on
-   the modal panel itself) */
 .backdrop-fade-in {
   animation: backdropFadeIn 0.2s ease-out both;
 }
@@ -256,9 +285,6 @@
   to { opacity: 1; }
 }
 
-/* NEW — source citation chip fades in slightly after the message text,
-   so the citation feels "attached" once the answer has formed. Subtle
-   and purposeful, matching the rest of the app's motion (no bounce). */
 .source-chip-enter {
   animation: sourceFadeIn 0.3s ease-out 0.25s both;
 }
@@ -268,14 +294,12 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* NEW — sidebar chat-history items stagger in on load instead of all
-   appearing at once. Each item gets an inline animation-delay in JSX. */
 .list-item-enter {
   animation: slideUpFade 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-/* NEW — renders the markdown Gemini answers come back with (bold, lists)
-   instead of showing literal "**text**"/"* " characters. */
+/* ---- Markdown content ---- */
+
 .markdown-body > *:first-child { margin-top: 0; }
 .markdown-body > *:last-child { margin-bottom: 0; }
 .markdown-body p { margin: 0 0 0.75em; white-space: pre-wrap; }

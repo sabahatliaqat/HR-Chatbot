@@ -1,23 +1,12 @@
 """
 database.py
-SQLite foundation for the HR chatbot. One file (hr_chatbot.db), five tables,
-covering everything planned in new-features-task-guide.md:
-
-- ChatSession / ChatMessage — real per-employee chat history (replaces the
-  placeholder "Recent" list and localStorage-based state)
-- QALog — every question+answer, for Analytics (weekly counts, most-cited
-  documents)
-- ChecklistItem / EmployeeProgress — HR-managed onboarding checklist
-  (replaces the localStorage-only version in OnboardingChecklist.jsx)
-
-This does NOT replace users.json/HR .env auth — that stays as-is (it's a
-flat lookup, a database adds nothing there). This is only for the
-relational data: sessions with many messages, employees with many
-checklist items, that kind of structure.
+Neon PostgreSQL database foundation for the HR chatbot.
 """
 
+import os
 from datetime import datetime, timezone
 
+from dotenv import load_dotenv
 from sqlalchemy import (
     create_engine,
     Column,
@@ -28,15 +17,41 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
 )
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
-DATABASE_URL = "sqlite:///./hr_chatbot.db"
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("NEON_DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError(
+        "PostgreSQL connection string not found. "
+        "Add DATABASE_URL to your backend .env file."
+    )
+
+database_url = make_url(DATABASE_URL)
+
+if database_url.drivername in ("postgres", "postgresql"):
+    database_url = database_url.set(drivername="postgresql+psycopg")
+
+if database_url.drivername != "postgresql+psycopg":
+    raise ValueError(
+        "Invalid database driver. Please use a Neon PostgreSQL connection string."
+    )
 
 engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}  # needed for SQLite + FastAPI's threaded requests
+    database_url,
+    pool_pre_ping=True,
+    pool_recycle=300,
 )
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+)
+
 Base = declarative_base()
 
 
@@ -44,9 +59,7 @@ def utcnow():
     return datetime.now(timezone.utc)
 
 
-# -----------------------------
 # Chat history
-# -----------------------------
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
 
@@ -55,7 +68,11 @@ class ChatSession(Base):
     title = Column(String, default="New Chat")
     created_at = Column(DateTime, default=utcnow)
 
-    messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
+    messages = relationship(
+        "ChatMessage",
+        back_populates="session",
+        cascade="all, delete-orphan",
+    )
 
 
 class ChatMessage(Base):
@@ -63,25 +80,16 @@ class ChatMessage(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(Integer, ForeignKey("chat_sessions.id"), nullable=False)
-    role = Column(String, nullable=False)          # "user" | "assistant"
+    role = Column(String, nullable=False)
     content = Column(Text, nullable=False)
-    source = Column(String, nullable=True)          # only set for assistant messages
+    source = Column(String, nullable=True)
     created_at = Column(DateTime, default=utcnow)
 
     session = relationship("ChatSession", back_populates="messages")
 
 
-# -----------------------------
 # Analytics
-# -----------------------------
 class QALog(Base):
-    """
-    One row per question asked, independent of ChatMessage — this is what
-    Analytics aggregates over (weekly counts, most-cited documents). Kept
-    separate from ChatMessage so Analytics queries don't have to join
-    through sessions, and so this table can be summarized/trimmed
-    independently later if it grows large.
-    """
     __tablename__ = "qa_logs"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -92,16 +100,14 @@ class QALog(Base):
     created_at = Column(DateTime, default=utcnow, index=True)
 
 
-# -----------------------------
 # Onboarding checklist
-# -----------------------------
 class ChecklistItem(Base):
     __tablename__ = "checklist_items"
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
-    suggested_question = Column(Text, nullable=True)  # sent to /chat when the employee taps "Ask"
+    suggested_question = Column(Text, nullable=True)
     created_at = Column(DateTime, default=utcnow)
 
 
@@ -115,9 +121,7 @@ class EmployeeProgress(Base):
     completed_at = Column(DateTime, nullable=True)
 
 
-# -----------------------------
 # FastAPI dependency
-# -----------------------------
 def get_db():
     db = SessionLocal()
     try:
@@ -127,5 +131,5 @@ def get_db():
 
 
 def init_db():
-    """Creates hr_chatbot.db and all tables if they don't exist yet."""
+    """Creates PostgreSQL tables if they do not already exist."""
     Base.metadata.create_all(bind=engine)

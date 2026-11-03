@@ -12,7 +12,12 @@ const TABS = [
   { key: 'checklist', label: 'Checklist' },
 ]
 
-export default function AdminPage({ user, onLogout }) {
+export default function AdminPage({
+  user,
+  onLogout,
+  darkMode,
+  onToggleTheme,
+}) {
   const [activeTab, setActiveTab] = useState('documents')
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
@@ -22,12 +27,18 @@ export default function AdminPage({ user, onLogout }) {
       <nav className="flex justify-between items-center w-full px-margin-desktop py-base fixed top-0 left-0 z-50 bg-surface-container-lowest/70 backdrop-blur-xl border-b border-surface-variant h-20">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
-            <img src="/arcana_info_logo.jfif" alt="Arcana Info" className="w-14 h-14 object-contain rounded-lg" />
+            <img
+              src="/arcana_info_logo.jfif"
+              alt="Arcana Info"
+              className="w-14 h-14 object-contain rounded-lg"
+            />
             <span className="font-headline-md text-headline-md font-bold text-primary hidden md:block">
               Arch Assistant
             </span>
           </div>
+
           <div className="hidden md:block h-6 w-px bg-outline-variant mx-2" />
+
           <div className="hidden md:flex items-center gap-1">
             {TABS.map((tab) => (
               <button
@@ -44,13 +55,35 @@ export default function AdminPage({ user, onLogout }) {
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-3">
           <span className="font-label-md text-label-md text-on-surface-variant mr-2 hidden sm:block">
             {user.email}
           </span>
+
+          {/* Light / Dark Mode Toggle */}
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="relative flex items-center w-14 h-8 rounded-full bg-surface-container-high border border-outline-variant transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          >
+            <span
+              className={`absolute left-1 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white shadow-md transition-transform duration-300 ${
+                darkMode ? 'translate-x-6' : 'translate-x-0'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">
+                {darkMode ? 'dark_mode' : 'light_mode'}
+              </span>
+            </span>
+          </button>
+
           <button
             onClick={() => setLogoutConfirmOpen(true)}
             aria-label="Log out"
+            title="Log out"
             className="p-2 rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors duration-250"
           >
             <span className="material-symbols-outlined">logout</span>

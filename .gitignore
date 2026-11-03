@@ -44,3 +44,4 @@ venv/
 
 # Backend FAISS index
 backend/faiss_index/
+.neon

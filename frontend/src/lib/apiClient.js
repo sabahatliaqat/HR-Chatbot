@@ -8,14 +8,10 @@
  * login is kept in memory here and attached automatically to those calls.
  */
 
-const BACKEND_URL = 'http://127.0.0.1:8000'
+const BACKEND_URL = 'http://127.0.0.1:8001'
 
 const TOKEN_STORAGE_KEY = 'arch_auth_token'
 
-// Initialize from localStorage so a page refresh doesn't silently log the
-// user out of write actions (upload/reset) while the UI still looks
-// logged in — this was a real bug: the token used to live only in this
-// module's memory, so a refresh cleared it without any visible sign.
 let authToken = localStorage.getItem(TOKEN_STORAGE_KEY)
 
 export function setAuthToken(token) {
@@ -23,7 +19,7 @@ export function setAuthToken(token) {
   try {
     localStorage.setItem(TOKEN_STORAGE_KEY, token)
   } catch {
-    // non-critical — worst case, token doesn't survive a refresh
+    // Non-critical
   }
 }
 
@@ -32,17 +28,10 @@ export function clearAuthToken() {
   try {
     localStorage.removeItem(TOKEN_STORAGE_KEY)
   } catch {
-    // non-critical
+    // Non-critical
   }
 }
 
-// Reads { email, role } straight out of the JWT's payload so App.jsx can
-// restore the logged-in view on a page refresh without a round trip —
-// the token was already persisted to localStorage, but nothing decoded it
-// back into UI state, so a refresh silently dropped you to the login page
-// even with a perfectly valid token sitting there.
-// This is a read of already-issued claims for UI purposes only; every
-// actual request is still re-authorized server-side regardless.
 export function getStoredUser() {
   if (!authToken) return null
   try {
@@ -64,7 +53,9 @@ function authHeaders() {
 
 export async function isBackendAlive() {
   try {
-    const res = await fetch(`${BACKEND_URL}/`, { signal: AbortSignal.timeout(3000) })
+    const res = await fetch(`${BACKEND_URL}/`, {
+      signal: AbortSignal.timeout(3000),
+    })
     return res.ok
   } catch {
     return false
@@ -80,14 +71,9 @@ export async function sendMessage(question, sessionId) {
   if (!res.ok) {
     throw new Error(`Backend returned ${res.status}`)
   }
-  return res.json() // { success, question, answer, source, session_id }
+  return res.json()
 }
 
-// ChatGPT-style token-by-token response. Reads newline-delimited JSON off
-// /chat/stream and calls onToken(delta) as each chunk arrives; resolves
-// with the final { answer, source, session_id } once the server sends its
-// "done" event. onSessionId (optional) fires as soon as the session id is
-// known, before any tokens — lets the caller start tracking it early.
 export async function streamMessage(question, sessionId, onToken, onSessionId) {
   const res = await fetch(`${BACKEND_URL}/chat/stream`, {
     method: 'POST',
@@ -134,21 +120,19 @@ export async function streamMessage(question, sessionId, onToken, onSessionId) {
 }
 
 export async function listSessions() {
-  const res = await fetch(`${BACKEND_URL}/chat/sessions`, { headers: { ...authHeaders() } })
-  if (!res.ok) {
-    throw new Error(`Backend returned ${res.status}`)
-  }
-  return res.json() // [{ id, title, created_at }]
+  const res = await fetch(`${BACKEND_URL}/chat/sessions`, {
+    headers: { ...authHeaders() },
+  })
+  if (!res.ok) throw new Error(`Backend returned ${res.status}`)
+  return res.json()
 }
 
 export async function getSessionMessages(sessionId) {
   const res = await fetch(`${BACKEND_URL}/chat/sessions/${sessionId}/messages`, {
     headers: { ...authHeaders() },
   })
-  if (!res.ok) {
-    throw new Error(`Backend returned ${res.status}`)
-  }
-  return res.json() // [{ role, content, source, created_at }]
+  if (!res.ok) throw new Error(`Backend returned ${res.status}`)
+  return res.json()
 }
 
 export async function deleteSession(sessionId) {
@@ -156,30 +140,31 @@ export async function deleteSession(sessionId) {
     method: 'DELETE',
     headers: { ...authHeaders() },
   })
-  if (!res.ok) {
-    throw new Error(`Backend returned ${res.status}`)
-  }
+  if (!res.ok) throw new Error(`Backend returned ${res.status}`)
   return res.json()
 }
 
 export async function getEmployees() {
-  const res = await fetch(`${BACKEND_URL}/employees`, { headers: { ...authHeaders() } })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error(body.detail || `Backend returned ${res.status}`)
-  }
-  return res.json() // [{ email, completed_items, total_items }]
-}
-
-export async function getEmployeeSessions(email) {
-  const res = await fetch(`${BACKEND_URL}/employees/${encodeURIComponent(email)}/sessions`, {
+  const res = await fetch(`${BACKEND_URL}/employees`, {
     headers: { ...authHeaders() },
   })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     throw new Error(body.detail || `Backend returned ${res.status}`)
   }
-  return res.json() // [{ id, title, created_at }]
+  return res.json()
+}
+
+export async function getEmployeeSessions(email) {
+  const res = await fetch(
+    `${BACKEND_URL}/employees/${encodeURIComponent(email)}/sessions`,
+    { headers: { ...authHeaders() } }
+  )
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.detail || `Backend returned ${res.status}`)
+  }
+  return res.json()
 }
 
 export async function getEmployeeSessionMessages(email, sessionId) {
@@ -191,46 +176,53 @@ export async function getEmployeeSessionMessages(email, sessionId) {
     const body = await res.json().catch(() => ({}))
     throw new Error(body.detail || `Backend returned ${res.status}`)
   }
-  return res.json() // [{ role, content, source, created_at }]
+  return res.json()
 }
 
 export async function getAnalyticsSummary() {
-  const res = await fetch(`${BACKEND_URL}/analytics/summary`, { headers: { ...authHeaders() } })
+  const res = await fetch(`${BACKEND_URL}/analytics/summary`, {
+    headers: { ...authHeaders() },
+  })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     throw new Error(body.detail || `Backend returned ${res.status}`)
   }
-  return res.json() // { total_questions, total_employees, questions_last_7_days, most_cited_documents }
+  return res.json()
 }
 
 export async function getChecklistItems() {
-  const res = await fetch(`${BACKEND_URL}/checklist/items`, { headers: { ...authHeaders() } })
-  if (!res.ok) {
-    throw new Error(`Backend returned ${res.status}`)
-  }
-  return res.json() // [{ id, title, description, suggested_question }]
+  const res = await fetch(`${BACKEND_URL}/checklist/items`, {
+    headers: { ...authHeaders() },
+  })
+  if (!res.ok) throw new Error(`Backend returned ${res.status}`)
+  return res.json()
 }
 
 export async function getChecklistProgress() {
-  const res = await fetch(`${BACKEND_URL}/checklist/progress`, { headers: { ...authHeaders() } })
-  if (!res.ok) {
-    throw new Error(`Backend returned ${res.status}`)
-  }
-  return res.json() // [{ item_id, completed }]
+  const res = await fetch(`${BACKEND_URL}/checklist/progress`, {
+    headers: { ...authHeaders() },
+  })
+  if (!res.ok) throw new Error(`Backend returned ${res.status}`)
+  return res.json()
 }
 
 export async function setChecklistProgress(itemId, completed) {
-  const res = await fetch(`${BACKEND_URL}/checklist/progress/${itemId}?completed=${completed}`, {
-    method: 'POST',
-    headers: { ...authHeaders() },
-  })
-  if (!res.ok) {
-    throw new Error(`Backend returned ${res.status}`)
-  }
-  return res.json() // { item_id, completed }
+  const res = await fetch(
+    `${BACKEND_URL}/checklist/progress/${itemId}?completed=${completed}`,
+    {
+      method: 'POST',
+      headers: { ...authHeaders() },
+    }
+  )
+  if (!res.ok) throw new Error(`Backend returned ${res.status}`)
+  return res.json()
 }
 
-export async function createChecklistItem({ title, description, suggestedQuestion }) {
+export async function createChecklistItem({
+  title,
+  description,
+  suggestedQuestion,
+}) {
   const res = await fetch(`${BACKEND_URL}/checklist/items`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -244,7 +236,7 @@ export async function createChecklistItem({ title, description, suggestedQuestio
     const body = await res.json().catch(() => ({}))
     throw new Error(body.detail || `Backend returned ${res.status}`)
   }
-  return res.json() // { id, title, description, suggested_question }
+  return res.json()
 }
 
 export async function deleteChecklistItem(itemId) {
@@ -273,7 +265,7 @@ export async function uploadFiles(files) {
     const body = await res.json().catch(() => ({}))
     throw new Error(body.detail || `Backend returned ${res.status}`)
   }
-  return res.json() // { success, message, uploaded_files, skipped_files }
+  return res.json()
 }
 
 export async function resetDocuments() {
@@ -290,17 +282,18 @@ export async function resetDocuments() {
 
 export async function getIndexedDocuments() {
   const res = await fetch(`${BACKEND_URL}/indexed-documents`)
-  if (!res.ok) {
-    throw new Error(`Backend returned ${res.status}`)
-  }
-  return res.json() // { success, indexed_files: [{filename, size_kb, uploaded_at, status}], count, total_chunks }
+  if (!res.ok) throw new Error(`Backend returned ${res.status}`)
+  return res.json()
 }
 
 export async function deleteDocument(filename) {
-  const res = await fetch(`${BACKEND_URL}/documents/${encodeURIComponent(filename)}`, {
-    method: 'DELETE',
-    headers: { ...authHeaders() },
-  })
+  const res = await fetch(
+    `${BACKEND_URL}/documents/${encodeURIComponent(filename)}`,
+    {
+      method: 'DELETE',
+      headers: { ...authHeaders() },
+    }
+  )
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     throw new Error(body.detail || `Backend returned ${res.status}`)
@@ -308,7 +301,6 @@ export async function deleteDocument(filename) {
   return res.json()
 }
 
-// role: "employee" | "hr"
 export async function loginRequest(email, password, role) {
   let res
   try {
@@ -318,14 +310,17 @@ export async function loginRequest(email, password, role) {
       body: JSON.stringify({ email, password, role }),
     })
   } catch {
-    throw new Error(`Can't reach the backend at ${BACKEND_URL}. Make sure it's running.`)
+    throw new Error(
+      `Can't reach the backend at ${BACKEND_URL}. Make sure it's running.`
+    )
   }
+
   const body = await res.json().catch(() => ({}))
   if (!res.ok) {
     throw new Error(body.detail || 'Login failed.')
   }
   setAuthToken(body.token)
-  return body // { success, token, email, role }
+  return body
 }
 
 export async function signupRequest(email, password) {
@@ -337,12 +332,15 @@ export async function signupRequest(email, password) {
       body: JSON.stringify({ email, password }),
     })
   } catch {
-    throw new Error(`Can't reach the backend at ${BACKEND_URL}. Make sure it's running.`)
+    throw new Error(
+      `Can't reach the backend at ${BACKEND_URL}. Make sure it's running.`
+    )
   }
+
   const body = await res.json().catch(() => ({}))
   if (!res.ok) {
     throw new Error(body.detail || 'Signup failed.')
   }
   setAuthToken(body.token)
-  return body // { success, token, email, role }
+  return body
 }

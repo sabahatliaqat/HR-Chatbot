@@ -14,6 +14,7 @@ dependencies = [
     "numpy==2.5.1",
     "pdfplumber==0.11.10",
     "pillow==12.3.0",
+    "pinecone>=10.3.0",
     "psycopg[binary]>=3.3.7",
     "pydantic==2.13.4",
     "pyjwt==2.13.0",

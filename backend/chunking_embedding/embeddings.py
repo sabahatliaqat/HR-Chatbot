@@ -1,107 +1,163 @@
-"""
-embeddings.py
-Converts chunks into vector embeddings and creates/updates a FAISS index on disk.
-
-IMPORTANT: the embedding model here MUST exactly match the one used in
-backend/rag_chain.py to embed the user's question at query time. If they
-don't match, the vector spaces won't line up and similarity search will
-return irrelevant chunks (or throw a dimension-mismatch error).
-
-backend/rag_chain.py currently uses: models/gemini-embedding-001
-(text-embedding-004 was shut down by Google on Jan 14, 2026)
--> so we use the exact same model here.
-"""
-
 import os
+import uuid
+
 from dotenv import load_dotenv, find_dotenv
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain_core.documents import Document
+from pinecone import Pinecone
 
-load_dotenv(find_dotenv(usecwd=True))
+
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
-FAISS_INDEX_PATH = "faiss_index"
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME")
+
+
+if not GOOGLE_API_KEY:
+    raise ValueError(
+        "GEMINI_API_KEY is missing from the backend .env file."
+    )
+
+if not PINECONE_API_KEY:
+    raise ValueError(
+        "PINECONE_API_KEY is missing from the backend .env file."
+    )
+
+if not PINECONE_INDEX_NAME:
+    raise ValueError(
+        "PINECONE_INDEX_NAME is missing from the backend .env file."
+    )
+
 
 embedding_model = GoogleGenerativeAIEmbeddings(
-    model="models/gemini-embedding-001",   # <-- must match rag_chain.py exactly
+    model="models/gemini-embedding-001",
     google_api_key=GOOGLE_API_KEY
 )
 
 
-def create_or_update_index(chunks: list[dict]):
-    """
-    chunks: list of {"text": ..., "metadata": {...}} — this is the output of
-    chunk_plain_text() / chunk_markdown_text() from chunking.py
+pinecone_client = Pinecone(
+    api_key=PINECONE_API_KEY
+)
 
-    Creates a new FAISS index if one doesn't exist yet at FAISS_INDEX_PATH,
-    otherwise loads the existing one and adds the new chunks to it — so
-    uploading more documents later doesn't wipe out what's already indexed.
+pinecone_index = pinecone_client.Index(
+    PINECONE_INDEX_NAME
+)
+
+
+def create_or_update_index(chunks: list[dict]) -> int:
     """
-    documents = [
-        Document(page_content=chunk["text"], metadata=chunk["metadata"])
+    Creates Gemini embeddings for document chunks and stores them in Pinecone.
+
+    Each chunk must contain:
+    {
+        "text": "chunk text",
+        "metadata": {"source": "filename.pdf"}
+    }
+
+    Replaces existing vectors belonging to the same document.
+    Returns the number of uploaded chunks.
+    """
+
+    if not chunks:
+        return 0
+
+    texts = [
+        chunk["text"]
         for chunk in chunks
     ]
 
-    if os.path.exists(FAISS_INDEX_PATH):
-        vector_store = FAISS.load_local(
-            FAISS_INDEX_PATH,
-            embedding_model,
-            allow_dangerous_deserialization=True
-        )
-        vector_store.add_documents(documents)
-    else:
-        vector_store = FAISS.from_documents(documents, embedding_model)
+    embeddings = embedding_model.embed_documents(texts)
 
-    vector_store.save_local(FAISS_INDEX_PATH)
-    return vector_store
+    vectors = []
+
+    for chunk, embedding in zip(chunks, embeddings):
+
+        metadata = {
+            "text": chunk["text"]
+        }
+
+        for key, value in chunk.get("metadata", {}).items():
+
+            if value is None:
+                continue
+
+            if isinstance(value, (str, int, float, bool)):
+                metadata[key] = value
+
+            elif isinstance(value, list) and all(
+                isinstance(item, str) for item in value
+            ):
+                metadata[key] = value
+
+            else:
+                metadata[key] = str(value)
+
+        vectors.append({
+            "id": str(uuid.uuid4()),
+            "values": embedding,
+            "metadata": metadata
+        })
+
+    source_filename = (
+        chunks[0].get("metadata", {}).get("source")
+    )
+
+    if source_filename:
+        pinecone_index.delete(
+            filter={
+                "source": {
+                    "$eq": source_filename
+                }
+            }
+        )
+
+    for start in range(0, len(vectors), 100):
+
+        batch = vectors[start:start + 100]
+
+        pinecone_index.upsert(
+            vectors=batch
+        )
+
+    return len(vectors)
 
 
 def delete_document_from_index(filename: str) -> int:
     """
-    Removes every chunk whose metadata["source"] == filename from the
-    FAISS index. Returns how many chunks were removed (0 if the index
-    doesn't exist or the file has no chunks in it).
-
-    NOTE: relies on langchain_community's FAISS wrapper internals
-    (vector_store.docstore._dict) to find which chunk ids belong to this
-    file — there's no public "delete by metadata filter" method as of
-    this langchain-community version. If a future version changes this
-    internal structure, this function will need updating.
+    Deletes all Pinecone vectors belonging to a document.
+    Returns the actual number of matching vectors before deletion.
     """
-    if not os.path.exists(FAISS_INDEX_PATH):
+
+    if not filename:
         return 0
 
-    vector_store = FAISS.load_local(
-        FAISS_INDEX_PATH,
-        embedding_model,
-        allow_dangerous_deserialization=True
+    document_filter = {
+        "source": {
+            "$eq": filename
+        }
+    }
+
+    stats = pinecone_index.describe_index_stats(
+        filter=document_filter
     )
 
-    ids_to_delete = [
-        doc_id for doc_id, doc in vector_store.docstore._dict.items()
-        if doc.metadata.get("source") == filename
-    ]
+    matching_count = stats.total_vector_count or 0
 
-    if not ids_to_delete:
+    if matching_count == 0:
         return 0
 
-    vector_store.delete(ids=ids_to_delete)
-    vector_store.save_local(FAISS_INDEX_PATH)
-    return len(ids_to_delete)
+    pinecone_index.delete(
+        filter=document_filter
+    )
+
+    return matching_count
 
 
 def count_total_chunks() -> int:
     """
-    Total number of chunks currently in the FAISS index, across all
-    documents — powers the Admin dashboard's "Chunks Indexed" stat.
+    Returns the total number of vectors stored in Pinecone.
     """
-    if not os.path.exists(FAISS_INDEX_PATH):
-        return 0
 
-    vector_store = FAISS.load_local(
-        FAISS_INDEX_PATH,
-        embedding_model,
-        allow_dangerous_deserialization=True
-    )
-    return len(vector_store.docstore._dict)
+    stats = pinecone_index.describe_index_stats()
+
+    return stats.total_vector_count or 0

@@ -1,114 +1,104 @@
 ﻿# 🏢 Arch Assistant — AI-Powered HR Chatbot
 
-**A document-grounded HR assistant developed for Arcana Info using Retrieval-Augmented Generation (RAG).**
+**A document-grounded HR assistant built for Arcana Info using Retrieval-Augmented Generation (RAG).**
 
 ![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Vite](https://img.shields.io/badge/Vite-Frontend-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![Gemini](https://img.shields.io/badge/Google_Gemini-AI-4285F4?style=for-the-badge&logo=google&logoColor=white)
-![Pinecone](https://img.shields.io/badge/Pinecone-Vector_DB-000000?style=for-the-badge)
-![Neon](https://img.shields.io/badge/Neon-PostgreSQL-00E599?style=for-the-badge)
+![React](https://img.shields.io/badge/React-Frontend-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Gemini](https://img.shields.io/badge/Google-Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![Pinecone](https://img.shields.io/badge/Vector_DB-Pinecone-000000?style=for-the-badge)
+![Neon](https://img.shields.io/badge/Database-Neon_PostgreSQL-00E599?style=for-the-badge)
 
----
+## 📌 Project Overview
 
-## 📌 Overview
+**Arch Assistant** is an AI-powered HR chatbot developed for Arcana Info. It helps employees and HR administrators access HR-related information through natural-language conversations.
 
-**Arch Assistant** is an AI-powered HR chatbot developed for Arcana Info. It helps employees access company information by asking natural-language questions about HR policies, leave entitlements, employee benefits, onboarding, and IT procedures.
+The chatbot uses Retrieval-Augmented Generation (RAG) to retrieve relevant information from uploaded company documents and generate context-aware responses using Google's Gemini models.
 
-The application uses Retrieval-Augmented Generation (RAG) to retrieve relevant information from uploaded company documents and generate context-grounded answers using Google Gemini.
-
-It also provides a dedicated HR Admin Dashboard for document management, employee monitoring, onboarding checklist management, and usage analytics.
+The application includes an employee-facing chat interface and an HR administration dashboard for document management, employee information, onboarding checklists, and analytics.
 
 ## ✨ Key Features
 
-### 💬 Employee Chat
+### Employee Features
+- Ask HR-related questions in natural language.
+- Receive answers grounded in uploaded company documents.
+- Access chat history.
+- View and manage onboarding checklist items.
+- Receive streamed chatbot responses.
 
-- Ask questions about company policies and HR procedures.
-- Receive AI-generated answers grounded in uploaded HR documents.
-- Stream responses using NDJSON.
-- Maintain persistent chat history and conversation sessions.
-- Ask follow-up questions using conversation context.
-- View source documents associated with retrieved answers.
-- Access employee onboarding checklists.
-
-### 🛡️ HR Admin Dashboard
-
+### HR Admin Features
+- Secure HR administrator login.
 - Upload and manage HR documents.
-- View indexed documents.
-- Delete individual documents.
-- Manage employee onboarding checklist items.
-- View registered employees.
-- Monitor employee chat sessions.
-- Access usage analytics and activity statistics.
+- Manage employee information.
+- Create and manage onboarding checklist items.
+- View dashboard analytics and chatbot activity.
+- Monitor employee onboarding progress.
 
-### 🧠 Retrieval-Augmented Generation (RAG)
-
-- Extract text from uploaded documents.
-- Process and split documents into chunks.
-- Generate document and query embeddings using Gemini.
-- Store and retrieve vectors through Pinecone.
-- Retrieve relevant document chunks using similarity search.
-- Generate context-grounded responses using Gemini.
-- Apply similarity thresholds and groundedness checks.
-- Support PDF, Markdown, and image-processing workflows.
+### AI and RAG Features
+- Document processing and text extraction.
+- Text chunking and embedding generation.
+- Semantic search using Pinecone.
+- Context-aware response generation using Gemini.
+- Retrieval-based answers using relevant document content.
+- Conversation context for follow-up questions.
 
 ## 🏗️ System Architecture
 
-The application uses Gemini for both embeddings and response generation, while Pinecone handles vector storage and retrieval. Neon PostgreSQL manages persistent application data.
+Arch Assistant follows a Retrieval-Augmented Generation architecture.
+
+### Document Ingestion Flow
+
+1. HR uploads company documents.
+2. The backend extracts and processes document content.
+3. Text is divided into smaller chunks.
+4. Gemini generates vector embeddings.
+5. Embeddings are stored in Pinecone for retrieval.
+
+### Question and Answer Flow
+
+1. An employee submits a question.
+2. The question is converted into an embedding using the same embedding model.
+3. Pinecone retrieves relevant document chunks.
+4. Retrieved context is passed to the Gemini language model.
+5. Gemini generates a context-aware response.
+6. The response is returned to the frontend.
+
+### Architecture Diagram
 
 ```mermaid
 flowchart TD
-    A["React Frontend<br/>Employee & HR Dashboard"]
-    B["FastAPI Backend"]
-    C["Document Upload"]
-    D["Document Processing & Chunking"]
-    E["Gemini Embedding Model"]
-    F[("Pinecone Vector Database")]
-    G["User Question"]
-    H["Gemini Query Embedding"]
-    I["Relevant Document Retrieval"]
-    J["Context + Chat History"]
-    K["Gemini LLM"]
-    L["Grounded Chatbot Response"]
-    M[("Neon PostgreSQL<br/>Application Data")]
+    A[HR Admin] --> B[Document Upload]
+    B --> C[Document Processing]
+    C --> D[Text Chunking]
+    D --> E[Gemini Embeddings]
+    E --> F[(Pinecone Vector Database)]
 
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
+    G[Employee] --> H[React Frontend]
+    H --> I[FastAPI Backend]
+    I --> J[Question Embedding]
+    J --> F
+    F --> K[Relevant Document Context]
+    K --> L[Gemini LLM]
+    L --> M[Generated Response]
+    M --> H
 
-    A --> G
-    G --> B
-    B --> H
-    H --> I
-    F --> I
-    I --> J
-    J --> K
-    K --> L
-    L --> A
-
-    B <--> M
+    I <--> N[(Neon PostgreSQL)]
 ```
 
 ## 🛠️ Technology Stack
 
-| Layer | Technology | Purpose |
-|---|---|---|
-| Backend | Python, FastAPI | API development and backend services |
-| Frontend | React 18, Vite | Interactive user interface |
-| Styling | Tailwind CSS | Responsive UI design |
-| LLM | Google Gemini | Context-grounded answer generation |
-| Embeddings | Gemini Embedding 001 | Document and query embeddings |
-| Vector Database | Pinecone | Vector storage and semantic retrieval |
-| Application Database | Neon PostgreSQL | Persistent application data |
-| ORM | SQLAlchemy | Database operations |
-| Authentication | JWT, bcrypt | Authentication and password security |
-| Document Processing | LangChain, pdfplumber | Document processing and text extraction |
-| OCR | Tesseract, pytesseract | Image-based text extraction |
-| Charts | Recharts | Dashboard analytics |
-| API Server | Uvicorn | FastAPI application server |
+| Category | Technologies |
+|---|---|
+| Frontend | React, Vite, Tailwind CSS, JavaScript |
+| Backend | Python, FastAPI |
+| AI Model | Google Gemini |
+| Embeddings | `models/gemini-embedding-001` |
+| RAG | LangChain, Retrieval-Augmented Generation |
+| Vector Database | Pinecone |
+| Application Database | Neon PostgreSQL |
+| Authentication | JWT, bcrypt |
+| Document Processing | PDF processing, Markdown processing, OCR |
+| API Testing | FastAPI Swagger UI |
 
 ## 📂 Project Structure
 
@@ -132,49 +122,39 @@ HR-Chatbot/
 │   │   └── upload_routes.py
 │   │
 │   ├── docs/
-│   ├── tests/
 │   ├── uploads/
 │   ├── auth.py
 │   ├── database.py
 │   ├── main.py
 │   ├── rag_chain.py
-│   ├── migrate_faiss_to_pinecone.py
-│   ├── migrate_sqlite_to_neon.py
 │   ├── pyproject.toml
-│   ├── requirements.txt
 │   └── uv.lock
 │
 ├── frontend/
 │   ├── public/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── lib/
-│   │   ├── pages/
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── package.json
-│   ├── package-lock.json
-│   ├── tailwind.config.js
-│   └── vite.config.js
+│   └── src/
+│       ├── components/
+│       ├── lib/
+│       ├── pages/
+│       ├── App.jsx
+│       └── main.jsx
 │
-├── .gitignore
 ├── README.md
-├── package.json
-├── package-lock.json
-└── neon.ts
+└── .gitignore
 ```
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Python 3.12 or later
+Make sure you have the following installed:
+
+- Python 3.12 or higher
 - Node.js and npm
+- [uv](https://docs.astral.sh/uv/)
 - Git
-- UV package manager
-- Google Gemini API key
-- Pinecone account and API key
-- Neon PostgreSQL database
+
+You will also need API credentials for Google Gemini and Pinecone, along with a Neon PostgreSQL database.
 
 ### 1. Clone the Repository
 
@@ -187,49 +167,47 @@ cd HR-Chatbot
 
 Navigate to the backend directory:
 
-```bash
+```powershell
 cd backend
 ```
 
-Install dependencies:
+Install Python dependencies:
 
-```bash
+```powershell
 uv sync
 ```
 
-Create a `.env` file inside the `backend` directory:
+Create a `.env` file inside the `backend` directory and configure the following environment variables:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key
 
-DATABASE_URL=your_neon_postgresql_connection_string
-
 PINECONE_API_KEY=your_pinecone_api_key
 PINECONE_INDEX_NAME=hr-chatbot-gemini
 
-JWT_SECRET=your_secure_jwt_secret
+DATABASE_URL=your_neon_postgresql_connection_string
+
+JWT_SECRET=your_jwt_secret
 
 HR_EMAIL=your_hr_email
 HR_PASSWORD_HASH=your_hr_password_hash
 ```
 
-Replace the example values with your actual credentials.
-
-**Important:** Never upload `.env` files, API keys, passwords, or database credentials to GitHub.
+Replace the example values with your actual credentials. Never commit your `.env` file or expose API keys and database credentials.
 
 Start the backend server:
 
-```bash
+```powershell
 uv run uvicorn main:app --host 127.0.0.1 --port 8010 --reload
 ```
 
-Backend URL:
+Backend API:
 
 ```text
 http://127.0.0.1:8010
 ```
 
-Interactive API documentation:
+Swagger API documentation:
 
 ```text
 http://127.0.0.1:8010/docs
@@ -239,97 +217,99 @@ http://127.0.0.1:8010/docs
 
 Open another terminal and navigate to the frontend directory:
 
-```bash
+```powershell
 cd frontend
 ```
 
 Install dependencies:
 
-```bash
+```powershell
 npm install
 ```
 
-Start the development server:
+Start the frontend:
 
-```bash
+```powershell
 npm run dev
 ```
 
-Open the local Vite URL displayed in your terminal.
-
-**Note:** The current frontend API client is configured to communicate with the backend at `http://127.0.0.1:8010`.
+Open the local URL provided by Vite in your browser.
 
 ## 🗄️ Database and Vector Storage
 
+Arch Assistant uses two separate storage systems.
+
 ### Neon PostgreSQL
 
-Neon PostgreSQL is used for persistent application data, including:
+Neon PostgreSQL stores application-related data, including:
 
 - Chat sessions and messages.
 - Employee information.
 - Onboarding checklist items.
-- Employee progress.
-- QA logs and analytics records.
+- Employee onboarding progress.
+- Chatbot question-and-answer logs.
+- Analytics-related records.
 
-SQLAlchemy is used for database operations.
+### Pinecone
 
-### Pinecone Vector Database
+Pinecone stores document embeddings and supports semantic retrieval for the RAG pipeline.
 
-Pinecone stores document embeddings and supports semantic retrieval of relevant HR document chunks.
+Current vector index configuration:
 
-Current index configuration:
-
-| Configuration | Value |
+| Setting | Value |
 |---|---|
 | Index Name | `hr-chatbot-gemini` |
 | Embedding Model | `models/gemini-embedding-001` |
-| Dimensions | `3072` |
+| Dimensions | 3072 |
 | Similarity Metric | Cosine |
+| Cloud Provider | AWS |
+| Region | us-east-1 |
 
-### Google Gemini
+## 🔐 Security
 
-Google Gemini is used for two main tasks:
+- HR administrative routes require authentication.
+- JWT is used for authenticated sessions.
+- Password hashing is handled using bcrypt.
+- Environment variables are used for sensitive credentials.
+- Database and API credentials should never be committed to GitHub.
 
-1. **Embeddings:** Converts document chunks and user questions into vector representations.
-2. **Answer Generation:** Generates responses using the relevant information retrieved from Pinecone.
+## 📚 API Documentation
 
-## 🔌 API Documentation
+The backend provides API endpoints for authentication, chat functionality, chat history, document management, onboarding checklists, and analytics.
 
-The backend exposes REST API routes for:
+For the complete list of available routes and their request/response details, run the backend and visit:
 
-- Employee authentication and registration.
-- Chat and streaming responses.
-- Chat history and sessions.
-- HR document upload and management.
-- Employee onboarding checklists.
-- Employee roster management.
-- HR dashboard analytics.
+`http://127.0.0.1:8010/docs`
 
-Explore the complete API documentation through FastAPI Swagger UI:
+## 👩‍💻 Development Journey & Project Ownership
 
-```text
-http://127.0.0.1:8010/docs
-```
+Arch Assistant was initially developed as a collaborative project by a **five-member team** during our internship at **Arcana Info**.
 
-## 👥 Team & Contributions
+During the initial development phase, team members worked collaboratively on different parts of the application, including frontend development, backend development, document processing, RAG implementation, and testing.
 
-Developed as part of an internship project at **Arcana Info**.
+After the initial team phase, I took over the project and am now **solely handling its ongoing development and management**.
 
-- **Abubakr Chaudhry:** Backend Development, Authentication, API Routes and RAG Pipeline.
-- **Ali Ather:** Frontend Development, React UI and HR Admin Dashboard.
-- **Muhammad Saad:** Document Processing, Chunking, Embeddings and OCR.
-- **Sabahat Liaqat:** System Testing, API Testing and Deployment Support.
+My current responsibilities include:
 
-## 🔒 Security Notes
+- Further development and implementation of new features.
+- Improving the existing RAG pipeline and chatbot functionality.
+- Backend and frontend enhancements.
+- Database and vector storage management.
+- System testing and API testing.
+- Debugging, maintenance, and deployment.
 
-- Keep environment variables and credentials in `.env` files.
-- Never expose API keys or database connection strings.
-- Use secure JWT secrets.
-- Restrict HR administrative endpoints to authorized users.
-- Do not commit local dependency folders or generated build files.
+**The project began as a team effort, and I am now independently responsible for its continued development, improvements, and maintenance.**
+
+## 👤 Current Project Maintainer
+
+**Sabahat Liaqat**
+
+AI Engineer | Generative AI | RAG | Python | LLMs
+
+GitHub: [sabahatliaqat](https://github.com/sabahatliaqat)
 
 ---
 
-**Project:** Arch Assistant — AI-Powered HR Chatbot
-**Organization:** Arcana Info
-**Repository:** [HR-Chatbot](https://github.com/sabahatliaqat/HR-Chatbot)
+**Project:** Arch Assistant — AI-Powered HR Chatbot  
+**Organization:** Arcana Info  
+**Current Development:** Independently maintained and developed

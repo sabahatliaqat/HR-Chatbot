@@ -8,7 +8,7 @@
  * login is kept in memory here and attached automatically to those calls.
  */
 
-const BACKEND_URL = 'http://127.0.0.1:8001'
+const BACKEND_URL ='http://127.0.0.1:8010'
 
 const TOKEN_STORAGE_KEY = 'arch_auth_token'
 
